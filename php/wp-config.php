@@ -45,14 +45,14 @@ define('DB_COLLATE', '');
 
 // Set the default keys to use
 $_default_keys = array(
-define('AUTH_KEY',         'k+|@Kq-8OdZ^SzP:)xK>eMiw)+{F^)x  .u6XA0t?G%a^HVIP^_/gsGA3HIs3 K4');
-define('SECURE_AUTH_KEY',  'Z^vk)fW.U]`MW8xykmTf[,c /#ty+R?Wno~vMbd/u!l?I{mR TnN-nhU-|_;n)_Q');
-define('LOGGED_IN_KEY',    'xHXq-<Yj6xyoZJZcg-|}?16+@`,++*fix%T(TW!hv?#/|,59WR]RpQ>SQIf*}!kU');
-define('NONCE_KEY',        '3.%-{KwP4d]aWb#,DR+.VDkk^X,[Wq]Wcu~Bo1vI%S>BQ2sps--17l]6wlah}F?,');
-define('AUTH_SALT',        '0Z38lH&$0Oz*e6aNW{<WL/r]S[ /7Y)dZ{nh-|+;jgX#$e|JH|`Rusf7 <#)2?L2');
-define('SECURE_AUTH_SALT', 'h,4e8f6=0k:N7hvF!k.8OL1}H<O){w?;[%gKfga=$~vl<i}K6N9D/F[Yhw3NQq2(');
-define('LOGGED_IN_SALT',   'Zp4Y(_ab#y$0%=Q.O6&@+@eKfp.($Di{QaY=H+|NgtmWb/)qc25$YjdWnP<ET,Rr');
-define('NONCE_SALT',       '+/;~/A~h6[D]GfbV0<s:Nc}`sjM`DX~gL4eE* 7)c-*:<S4l1#+z?sAR!v,!I$F0');
+define('AUTH_KEY',         'k+|@Kq-8OdZ^SzP:)xK>eMiw)+{F^)x  .u6XA0t?G%a^HVIP^_/gsGA3HIs3 K4'),
+define('SECURE_AUTH_KEY',  'Z^vk)fW.U]`MW8xykmTf[,c /#ty+R?Wno~vMbd/u!l?I{mR TnN-nhU-|_;n)_Q'),
+define('LOGGED_IN_KEY',    'xHXq-<Yj6xyoZJZcg-|}?16+@`,++*fix%T(TW!hv?#/|,59WR]RpQ>SQIf*}!kU'),
+define('NONCE_KEY',        '3.%-{KwP4d]aWb#,DR+.VDkk^X,[Wq]Wcu~Bo1vI%S>BQ2sps--17l]6wlah}F?,'),
+define('AUTH_SALT',        '0Z38lH&$0Oz*e6aNW{<WL/r]S[ /7Y)dZ{nh-|+;jgX#$e|JH|`Rusf7 <#)2?L2'),
+define('SECURE_AUTH_SALT', 'h,4e8f6=0k:N7hvF!k.8OL1}H<O){w?;[%gKfga=$~vl<i}K6N9D/F[Yhw3NQq2('),
+define('LOGGED_IN_SALT',   'Zp4Y(_ab#y$0%=Q.O6&@+@eKfp.($Di{QaY=H+|NgtmWb/)qc25$YjdWnP<ET,Rr'),
+define('NONCE_SALT',       '+/;~/A~h6[D]GfbV0<s:Nc}`sjM`DX~gL4eE* 7)c-*:<S4l1#+z?sAR!v,!I$F0'),
 );
 
 // Set the token to use to seed the RNG, if we're on OpenShift
