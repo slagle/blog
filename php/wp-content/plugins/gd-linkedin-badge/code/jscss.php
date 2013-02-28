@@ -2,6 +2,7 @@
 function gdlbImageSelection(index, imgId) {
     var gdlbAllImages = [ <?php echo $gdlb_js_items; ?> ];
     var gdlbImage = document.getElementById(imgId);
+
     gdlbImage.src = "http://www.linkedin.com/img/webpromo/" + gdlbAllImages[index];
 }
 </script>

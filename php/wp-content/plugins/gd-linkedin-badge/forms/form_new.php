@@ -14,6 +14,12 @@
     <label for="<?php echo $this->get_field_id('url'); ?>"><?php _e("LinkedIn URL", "gd-linkedin-badge"); ?>:</label>
     <br />
     <input class="widefat gdlb-input" id="<?php echo $this->get_field_id('url'); ?>" name="<?php echo $this->get_field_name('url'); ?>" type="text" value="<?php echo $url; ?>" />
+    <label for="<?php echo $this->get_field_id('url'); ?>"><?php _e("URL Target", "gd-linkedin-badge"); ?>:</label>
+    <br />
+    <input class="widefat gdlb-input" id="<?php echo $this->get_field_id('target'); ?>" name="<?php echo $this->get_field_name('target'); ?>" type="text" value="<?php echo $target; ?>" />
+    <label for="<?php echo $this->get_field_id('url'); ?>"><?php _e("Alignment", "gd-linkedin-badge"); ?>:</label>
+    <br />
+    <input class="widefat gdlb-input" id="<?php echo $this->get_field_id('align'); ?>" name="<?php echo $this->get_field_name('align'); ?>" type="text" value="<?php echo $align; ?>" />
 </fieldset>
 
 <fieldset class="gdlb-fieldset">

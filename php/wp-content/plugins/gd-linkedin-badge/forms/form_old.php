@@ -11,6 +11,10 @@
     <br /><input class="widefat" style="width: 97%;" id="gdlb-description" name="gdlb-description" type="text" value="<?php echo $description; ?>" />
     <label for="gdlb-url"><?php _e("LinkedIn URL", "gd-linkedin-badge"); ?>:</label>
     <br /><input class="widefat" style="width: 97%;" id="gdlb-url" name="gdlb-url" type="text" value="<?php echo $url; ?>" />
+    <label for="gdlb-url"><?php _e("URL Target", "gd-linkedin-badge"); ?>:</label>
+    <br /><input class="widefat" style="width: 97%;" id="gdlb-target" name="gdlb-target" type="text" value="<?php echo $target; ?>" />
+    <label for="gdlb-url"><?php _e("Alignment", "gd-linkedin-badge"); ?>:</label>
+    <br /><input class="widefat" style="width: 97%;" id="gdlb-align" name="gdlb-align" type="text" value="<?php echo $align; ?>" />
 </fieldset>
 
 <fieldset style="border: 1px gray solid; padding: 6px">

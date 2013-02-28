@@ -1,10 +1,10 @@
 === GD LinkedIn Badge ===
 Contributors: GDragoN
 Donate link: http://www.dev4press.com/
-Version: 2.2.1
-Tags: widget, linkedin, badge, link, gdragon
-Requires at least: 2.0
-Tested up to: 3.4
+Version: 2.3
+Tags: widget, linkedin, badge, link, GDragoN, dev4press
+Requires at least: 2.3
+Tested up to: 3.5
 Stable tag: trunk
 
 This widget displays badge with a link to a LinkedIn profile page.
@@ -34,14 +34,22 @@ My portfolio website has this widget installed, so you can see it in action ther
 1. Widget options in WordPress 3.0
 
 == Upgrade Notice ==
-= 2.2.1 =
-Added Lithuanian translation.
+= 2.3 =
+Added option for settings URL target. Added option for alignment. Added classes to displayed widget elements. Changed some of the default widget settings. Updated translation POT file. Some small cleanup and optimization.
 
 == Changelog ==
+= 2.3 =
+* Added option for settings URL target
+* Added option for alignment
+* Added classes to displayed widget elements
+* Changed some of the default widget settings
+* Updated translation POT file
+* Some small cleanup and optimization
+
 = 2.2.1 =
 * Added Lithuanian translation ( Vincent G: http://www.host1free.com/ )
 
-= 2.2.0 =
+= 2.2 =
 * Compatibility with WordPress 3.3
 * Several minor updates
 
@@ -49,7 +57,7 @@ Added Lithuanian translation.
 * Added Norwegian translation
 * Several minor updates
 
-= 2.1.0 =
+= 2.1 =
 * Improved files and folders structure
 * Improved and added new translations
 * Code cleanup and other improvements
@@ -62,7 +70,7 @@ Added Lithuanian translation.
 = 2.0.1 =
 * Few small changes
 
-= 2.0.0 =
+= 2.0 =
 * Added support for new widget class
 * Improved JavaScript use
 * Few smaller changes
@@ -78,5 +86,9 @@ Here is the list of all configuration options:
   Text above the LinkedIn badge.
 * LinkedIn URL:
   Url to a LinkedIn public profile page
+* URL Target:
+  Used in the link for target attribute.
+* Alignment:
+  Apply alignment for the widget content
 * Badge Style:
   Badge to display.

@@ -3,7 +3,13 @@
 == Languages ==
 
 === English ===
-  * version: 2.2.1
+  * version: 2.3
+  * author: Milan Petrovic
+  * email: milan@gdragon.info
+  * web: http://www.dev4press.com/
+
+=== Serbian ===
+  * version: 2.3
   * author: Milan Petrovic
   * email: milan@gdragon.info
   * web: http://www.dev4press.com/
@@ -12,12 +18,6 @@
   * version: 2.2.1
   * author: Vincent G
   * web: http://www.host1free.com/
-
-=== Serbian ===
-  * version: 2.2.1
-  * author: Milan Petrovic
-  * email: milan@gdragon.info
-  * web: http://www.dev4press.com/
 
 === Danish ===
   * version: 2.1.2
