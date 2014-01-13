@@ -48,12 +48,10 @@ function wp_print_media_templates() {
 			<h3 class="upload-message">{{ data.message }}</h3>
 		<# } #>
 		<?php if ( ! _device_can_upload() ) : ?>
-			<h3 class="upload-instructions"><?php printf( __('The web browser on your device cannot be used to upload files. You may be able to use the <a href="%s">native app for your device</a> instead.'), 'http://wordpress.org/mobile/' ); ?></h3>
+			<h3 class="upload-instructions"><?php _e('The web browser on your device cannot be used to upload files. You may be able to use the <a href="http://wordpress.org/extend/mobile/">native app for your device</a> instead.'); ?></h3>
 		<?php elseif ( is_multisite() && ! is_upload_space_available() ) : ?>
 			<h3 class="upload-instructions"><?php _e( 'Upload Limit Exceeded' ); ?></h3>
-			<?php
-			/** This action is documented in wp-admin/includes/media.php */
-			do_action( 'upload_ui_over_quota' ); ?>
+			<?php do_action( 'upload_ui_over_quota' ); ?>
 
 		<?php else : ?>
 			<div class="upload-ui">
@@ -65,17 +63,13 @@ function wp_print_media_templates() {
 
 			<div class="post-upload-ui">
 				<?php
-				/** This action is documented in wp-admin/includes/media.php */
 				do_action( 'pre-upload-ui' );
-				/** This action is documented in wp-admin/includes/media.php */
 				do_action( 'pre-plupload-upload-ui' );
 
 				if ( 10 === remove_action( 'post-plupload-upload-ui', 'media_upload_flash_bypass' ) ) {
-					/** This action is documented in wp-admin/includes/media.php */
 					do_action( 'post-plupload-upload-ui' );
 					add_action( 'post-plupload-upload-ui', 'media_upload_flash_bypass' );
 				} else {
-					/** This action is documented in wp-admin/includes/media.php */
 					do_action( 'post-plupload-upload-ui' );
 				}
 
@@ -106,9 +100,7 @@ function wp_print_media_templates() {
 						$browser_uploader, '_blank' ); ?></p>
 				<?php endif; ?>
 
-				<?php
-				/** This action is documented in wp-admin/includes/media.php */
-				do_action( 'post-upload-ui' ); ?>
+				<?php do_action( 'post-upload-ui' ); ?>
 			</div>
 		<?php endif; ?>
 		</div>
@@ -213,10 +205,6 @@ function wp_print_media_templates() {
 					<# } #>
 				<# } #>
 
-				<# if ( data.fileLength ) { #>
-					<div class="file-length"><?php _e( 'Length:' ); ?> {{ data.fileLength }}</div>
-				<# } #>
-
 				<# if ( ! data.uploading && data.can.remove ) { #>
 					<a class="delete-attachment" href="#"><?php _e( 'Delete Permanently' ); ?></a>
 				<# } #>
@@ -293,47 +281,25 @@ function wp_print_media_templates() {
 
 		<div class="setting">
 			<label>
-				<# if ( data.model.canEmbed ) { #>
-					<span><?php _e('Embed or Link'); ?></span>
-				<# } else { #>
-					<span><?php _e('Link To'); ?></span>
-				<# } #>
-
+				<span><?php _e('Link To'); ?></span>
 				<select class="link-to"
 					data-setting="link"
-					<# if ( data.userSettings && ! data.model.canEmbed ) { #>
+					<# if ( data.userSettings ) { #>
 						data-user-setting="urlbutton"
 					<# } #>>
 
-				<# if ( data.model.canEmbed ) { #>
-					<option value="embed" selected>
-						<?php esc_attr_e('Embed Media Player'); ?>
-					</option>
-					<option value="file">
-				<# } else { #>
-					<option value="file" selected>
-				<# } #>
-					<# if ( data.model.canEmbed ) { #>
-						<?php esc_attr_e('Link to Media File'); ?>
-					<# } else { #>
-						<?php esc_attr_e('Media File'); ?>
-					<# } #>
-					</option>
-					<option value="post">
-					<# if ( data.model.canEmbed ) { #>
-						<?php esc_attr_e('Link to Attachment Page'); ?>
-					<# } else { #>
-						<?php esc_attr_e('Attachment Page'); ?>
-					<# } #>
-					</option>
-				<# if ( 'image' === data.type ) { #>
 					<option value="custom">
 						<?php esc_attr_e('Custom URL'); ?>
+					</option>
+					<option value="file" selected>
+						<?php esc_attr_e('Media File'); ?>
+					</option>
+					<option value="post">
+						<?php esc_attr_e('Attachment Page'); ?>
 					</option>
 					<option value="none">
 						<?php esc_attr_e('None'); ?>
 					</option>
-				<# } #>
 				</select>
 			</label>
 			<input type="text" class="link-to-custom" data-setting="linkUrl" />
@@ -348,7 +314,7 @@ function wp_print_media_templates() {
 						data-user-setting="imgsize"
 					<# } #>>
 					<?php
-					/** This filter is documented in wp-admin/includes/media.php */
+
 					$sizes = apply_filters( 'image_size_names_choose', array(
 						'thumbnail' => __('Thumbnail'),
 						'medium'    => __('Medium'),
@@ -381,14 +347,11 @@ function wp_print_media_templates() {
 					data-user-setting="urlbutton"
 				<# } #>>
 
-				<option value="post" selected>
-					<?php esc_attr_e('Attachment Page'); ?>
-				</option>
-				<option value="file">
+				<option value="file" selected>
 					<?php esc_attr_e('Media File'); ?>
 				</option>
-				<option value="none">
-					<?php esc_attr_e('None'); ?>
+				<option value="post">
+					<?php esc_attr_e('Attachment Page'); ?>
 				</option>
 			</select>
 		</label>
@@ -423,9 +386,7 @@ function wp_print_media_templates() {
 			<img src="{{ data.model.url }}" draggable="false" />
 		</div>
 
-		<?php
-		/** This filter is documented in wp-admin/includes/media.php */
-		if ( ! apply_filters( 'disable_captions', '' ) ) : ?>
+		<?php if ( ! apply_filters( 'disable_captions', '' ) ) : ?>
 			<label class="setting caption">
 				<span><?php _e('Caption'); ?></span>
 				<textarea data-setting="caption" />
@@ -502,10 +463,5 @@ function wp_print_media_templates() {
 	</script>
 	<?php
 
-	/**
-	 * Prints the media manager custom media templates.
-	 *
-	 * @since 3.5.0
-	 */
 	do_action( 'print_media_templates' );
 }

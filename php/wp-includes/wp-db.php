@@ -442,6 +442,15 @@ class wpdb {
 	var $collate;
 
 	/**
+	 * Whether to use mysql_real_escape_string
+	 *
+	 * @since 2.8.0
+	 * @access public
+	 * @var bool
+	 */
+	var $real_escape = false;
+
+	/**
 	 * Database Username
 	 *
 	 * @since 2.9.0
@@ -527,7 +536,7 @@ class wpdb {
 	function __construct( $dbuser, $dbpassword, $dbname, $dbhost ) {
 		register_shutdown_function( array( $this, '__destruct' ) );
 
-		if ( WP_DEBUG && WP_DEBUG_DISPLAY )
+		if ( WP_DEBUG )
 			$this->show_errors();
 
 		$this->init_charset();
@@ -631,14 +640,15 @@ class wpdb {
 	 * @param string   $charset The character set (optional)
 	 * @param string   $collate The collation (optional)
 	 */
-	function set_charset( $dbh, $charset = null, $collate = null ) {
-		if ( ! isset( $charset ) )
+	function set_charset($dbh, $charset = null, $collate = null) {
+		if ( !isset($charset) )
 			$charset = $this->charset;
-		if ( ! isset( $collate ) )
+		if ( !isset($collate) )
 			$collate = $this->collate;
-		if ( $this->has_cap( 'collation' ) && ! empty( $charset ) ) {
-			if ( function_exists( 'mysql_set_charset' ) && $this->has_cap( 'set_charset' ) ) {
+		if ( $this->has_cap( 'collation', $dbh ) && !empty( $charset ) ) {
+			if ( function_exists( 'mysql_set_charset' ) && $this->has_cap( 'set_charset', $dbh ) ) {
 				mysql_set_charset( $charset, $dbh );
+				$this->real_escape = true;
 			} else {
 				$query = $this->prepare( 'SET NAMES %s', $charset );
 				if ( ! empty( $collate ) )
@@ -846,29 +856,24 @@ class wpdb {
 	}
 
 	/**
-	 * Do not use, deprecated.
+	 * Weak escape, using addslashes()
 	 *
-	 * Use esc_sql() or wpdb::prepare() instead.
-	 *
+	 * @see addslashes()
 	 * @since 2.8.0
-	 * @deprecated 3.6.0
-	 * @see wpdb::prepare
-	 * @see esc_sql()
 	 * @access private
 	 *
 	 * @param string $string
 	 * @return string
 	 */
 	function _weak_escape( $string ) {
-		if ( func_num_args() === 1 && function_exists( '_deprecated_function' ) )
-			_deprecated_function( __METHOD__, '3.6', 'wpdb::prepare() or esc_sql()' );
 		return addslashes( $string );
 	}
 
 	/**
-	 * Real escape, using mysql_real_escape_string()
+	 * Real escape, using mysql_real_escape_string() or addslashes()
 	 *
 	 * @see mysql_real_escape_string()
+	 * @see addslashes()
 	 * @since 2.8.0
 	 * @access private
 	 *
@@ -876,17 +881,16 @@ class wpdb {
 	 * @return string escaped
 	 */
 	function _real_escape( $string ) {
-		if ( $this->dbh )
+		if ( $this->dbh && $this->real_escape )
 			return mysql_real_escape_string( $string, $this->dbh );
-
-		$class = get_class( $this );
-		_doing_it_wrong( $class, "$class must set a database connection for use with escaping.", E_USER_NOTICE );
-		return addslashes( $string );
+		else
+			return addslashes( $string );
 	}
 
 	/**
 	 * Escape data. Works on arrays.
 	 *
+	 * @uses wpdb::_escape()
 	 * @uses wpdb::_real_escape()
 	 * @since  2.8.0
 	 * @access private
@@ -896,7 +900,7 @@ class wpdb {
 	 */
 	function _escape( $data ) {
 		if ( is_array( $data ) ) {
-			foreach ( $data as $k => $v ) {
+			foreach ( (array) $data as $k => $v ) {
 				if ( is_array($v) )
 					$data[$k] = $this->_escape( $v );
 				else
@@ -910,30 +914,24 @@ class wpdb {
 	}
 
 	/**
-	 * Do not use, deprecated.
+	 * Escapes content for insertion into the database using addslashes(), for security.
 	 *
-	 * Use esc_sql() or wpdb::prepare() instead.
+	 * Works on arrays.
 	 *
 	 * @since 0.71
-	 * @deprecated 3.6.0
-	 * @see wpdb::prepare()
-	 * @see esc_sql()
-	 *
-	 * @param mixed $data
-	 * @return mixed
+	 * @param string|array $data to escape
+	 * @return string|array escaped as query safe string
 	 */
 	function escape( $data ) {
-		if ( func_num_args() === 1 && function_exists( '_deprecated_function' ) )
-			_deprecated_function( __METHOD__, '3.6', 'wpdb::prepare() or esc_sql()' );
 		if ( is_array( $data ) ) {
-			foreach ( $data as $k => $v ) {
+			foreach ( (array) $data as $k => $v ) {
 				if ( is_array( $v ) )
-					$data[$k] = $this->escape( $v, 'recursive' );
+					$data[$k] = $this->escape( $v );
 				else
-					$data[$k] = $this->_weak_escape( $v, 'internal' );
+					$data[$k] = $this->_weak_escape( $v );
 			}
 		} else {
-			$data = $this->_weak_escape( $data, 'internal' );
+			$data = $this->_weak_escape( $data );
 		}
 
 		return $data;
@@ -989,9 +987,12 @@ class wpdb {
 	 * @return null|false|string Sanitized query string, null if there is no query, false if there is an error and string
 	 * 	if there was something to prepare
 	 */
-	function prepare( $query, $args ) {
+	function prepare( $query, $args = null ) {
 		if ( is_null( $query ) )
 			return;
+
+		if ( func_num_args() < 2 )
+			_doing_it_wrong( 'wpdb::prepare', 'wpdb::prepare() requires at least two arguments.', '3.5' );
 
 		$args = func_get_args();
 		array_shift( $args );
@@ -1119,8 +1120,6 @@ class wpdb {
 		$this->last_result = array();
 		$this->col_info    = null;
 		$this->last_query  = null;
-		$this->rows_affected = $this->num_rows = 0;
-		$this->last_error  = '';
 
 		if ( is_resource( $this->result ) )
 			mysql_free_result( $this->result );
@@ -1139,15 +1138,7 @@ class wpdb {
 		$client_flags = defined( 'MYSQL_CLIENT_FLAGS' ) ? MYSQL_CLIENT_FLAGS : 0;
 
 		if ( WP_DEBUG ) {
-			$error_reporting = false;
-			if ( defined( 'E_DEPRECATED' ) ) {
-				$error_reporting = error_reporting();
-				error_reporting( $error_reporting ^ E_DEPRECATED );
-			}
 			$this->dbh = mysql_connect( $this->dbhost, $this->dbuser, $this->dbpassword, $new_link, $client_flags );
-			if ( false !== $error_reporting ) {
-				error_reporting( $error_reporting );
-			}
 		} else {
 			$this->dbh = @mysql_connect( $this->dbhost, $this->dbuser, $this->dbpassword, $new_link, $client_flags );
 		}
@@ -1188,14 +1179,8 @@ class wpdb {
 	function query( $query ) {
 		if ( ! $this->ready )
 			return false;
-		/**
-		 * Filter the database query.
-		 *
-		 * Some queries are made before the plugins have been loaded, and thus cannot be filtered with this method.
-		 *
-		 * @since 2.1.0
-		 * @param string $query Database query.
-		 */
+
+		// some queries are made before the plugins have been loaded, and thus cannot be filtered with this method
 		$query = apply_filters( 'query', $query );
 
 		$return_val = 0;
@@ -1218,10 +1203,6 @@ class wpdb {
 
 		// If there is an error then take note of it..
 		if ( $this->last_error = mysql_error( $this->dbh ) ) {
-			// Clear insert_id on a subsequent failed insert.
-			if ( $this->insert_id && preg_match( '/^\s*(insert|replace)\s/i', $query ) )
-				$this->insert_id = 0;
-
 			$this->print_error();
 			return false;
 		}
@@ -1319,7 +1300,6 @@ class wpdb {
 	function _insert_replace_helper( $table, $data, $format = null, $type = 'INSERT' ) {
 		if ( ! in_array( strtoupper( $type ), array( 'REPLACE', 'INSERT' ) ) )
 			return false;
-		$this->insert_id = 0;
 		$formats = $format = (array) $format;
 		$fields = array_keys( $data );
 		$formatted_fields = array();
@@ -1710,12 +1690,12 @@ class wpdb {
 	}
 
 	/**
-	 * Determine if a database supports a particular feature.
+	 * Determine if a database supports a particular feature
 	 *
 	 * @since 2.7.0
-	 * @see wpdb::db_version()
+	 * @see   wpdb::db_version()
 	 *
-	 * @param string $db_cap The feature to check for.
+	 * @param string $db_cap the feature
 	 * @return bool
 	 */
 	function has_cap( $db_cap ) {
@@ -1723,11 +1703,11 @@ class wpdb {
 
 		switch ( strtolower( $db_cap ) ) {
 			case 'collation' :    // @since 2.5.0
-			case 'group_concat' : // @since 2.7.0
-			case 'subqueries' :   // @since 2.7.0
+			case 'group_concat' : // @since 2.7
+			case 'subqueries' :   // @since 2.7
 				return version_compare( $version, '4.1', '>=' );
 			case 'set_charset' :
-				return version_compare( $version, '5.0.7', '>=' );
+				return version_compare($version, '5.0.7', '>=');
 		};
 
 		return false;

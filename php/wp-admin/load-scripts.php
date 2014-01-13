@@ -119,7 +119,7 @@ if ( is_array( $load ) )
 	$load = implode( '', $load );
 
 $load = preg_replace( '/[^a-z0-9,_-]+/i', '', $load );
-$load = array_unique( explode( ',', $load ) );
+$load = explode(',', $load);
 
 if ( empty($load) )
 	exit;

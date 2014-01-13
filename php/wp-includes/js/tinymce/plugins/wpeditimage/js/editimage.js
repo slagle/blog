@@ -497,7 +497,7 @@ wpImage = {
 			ed.selection.moveToBookmark(b);
 		}
 
-		ed.execCommand("mceEndUndoLevel");
+		tinyMCEPopup.execCommand("mceEndUndoLevel");
 		ed.execCommand('mceRepaint');
 		tinyMCEPopup.close();
 	},

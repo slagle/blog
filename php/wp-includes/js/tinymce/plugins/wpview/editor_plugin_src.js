@@ -1,4 +1,3 @@
-/* global tinymce */
 /**
  * WordPress View plugin.
  */
@@ -9,7 +8,7 @@
 		selected;
 
 	tinymce.create('tinymce.plugins.wpView', {
-		init : function( editor ) {
+		init : function( editor, url ) {
 			var wpView = this;
 
 			// Check if the `wp.mce` API exists.
@@ -34,7 +33,7 @@
 
 			// When the editor's content has been updated and the DOM has been
 			// processed, render the views in the document.
-			editor.onSetContent.add( function( editor ) {
+			editor.onSetContent.add( function( editor, o ) {
 				wp.mce.view.render( editor.getDoc() );
 			});
 
@@ -42,7 +41,7 @@
 
 				// When a view is selected, ensure content that is being pasted
 				// or inserted is added to a text node (instead of the view).
-				editor.selection.onBeforeSetContent.add( function( selection ) {
+				editor.selection.onBeforeSetContent.add( function( selection, o ) {
 					var view = wpView.getParentView( selection.getNode() ),
 						walker, target;
 
@@ -96,7 +95,7 @@
 
 			// Triggers when the selection is changed.
 			// Add the event handler to the top of the stack.
-			editor.onNodeChange.addToTop( function( editor, controlManager, node ) {
+			editor.onNodeChange.addToTop( function( editor, controlManager, node, collapsed, o ) {
 				var view = wpView.getParentView( node );
 
 				// Update the selected view.

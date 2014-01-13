@@ -1,13 +1,15 @@
 (function( exports, $ ){
 	var api = wp.customize;
 
-	/**
+	/*
 	 * @param options
 	 * - previewer - The Previewer instance to sync with.
 	 * - transport - The transport to use for previewing. Supports 'refresh' and 'postMessage'.
 	 */
 	api.Setting = api.Value.extend({
 		initialize: function( id, value, options ) {
+			var element;
+
 			api.Value.prototype.initialize.call( this, value, options );
 
 			this.id = id;
@@ -34,7 +36,7 @@
 			$.extend( this, options || {} );
 
 			this.id = id;
-			this.selector = '#customize-control-' + id.replace( /\]/g, '' ).replace( /\[/g, '-' );
+			this.selector = '#customize-control-' + id.replace( ']', '' ).replace( '[', '-' );
 			this.container = $( this.selector );
 
 			settings = $.map( this.params.settings, function( value ) {
@@ -83,16 +85,17 @@
 		ready: function() {},
 
 		dropdownInit: function() {
-			var control      = this,
-				statuses     = this.container.find('.dropdown-status'),
-				params       = this.params,
-				toggleFreeze = false,
-				update       = function( to ) {
-					if ( typeof to === 'string' && params.statuses && params.statuses[ to ] )
+			var control  = this,
+				statuses = this.container.find('.dropdown-status'),
+				params   = this.params,
+				update   = function( to ) {
+					if ( typeof	to === 'string' && params.statuses && params.statuses[ to ] )
 						statuses.html( params.statuses[ to ] ).show();
 					else
 						statuses.hide();
 				};
+
+			var toggleFreeze = false;
 
 			// Support the .dropdown class to open/close complex elements
 			this.container.on( 'click keydown', '.dropdown', function( event ) {
@@ -125,12 +128,12 @@
 				picker = this.container.find('.color-picker-hex');
 
 			picker.val( control.setting() ).wpColorPicker({
-				change: function() {
+				change: function( event, options ) {
 					control.setting.set( picker.wpColorPicker('color') );
-				},
-				clear: function() {
-					control.setting.set( false );
-				}
+ 				},
+ 				clear: function() {
+ 					control.setting.set( false );
+ 				}
 			});
 		}
 	});
@@ -194,7 +197,7 @@
 				panels;
 
 			this.uploader = {
-				init: function() {
+				init: function( up ) {
 					var fallback, button;
 
 					if ( this.supports.dragdrop )
@@ -316,7 +319,8 @@
 		sensitivity: 2000,
 
 		initialize: function( params, options ) {
-			var deferred = $.Deferred();
+			var deferred = $.Deferred(),
+				self     = this;
 
 			// This is the promise object.
 			deferred.promise( this );
@@ -484,7 +488,8 @@
 		 */
 		initialize: function( params, options ) {
 			var self = this,
-				rscheme = /^https?/;
+				rscheme = /^https?/,
+				url;
 
 			$.extend( this, options || {} );
 
@@ -548,19 +553,14 @@
 
 				// Check for URLs that include "/wp-admin/" or end in "/wp-admin".
 				// Strip hashes and query strings before testing.
-				if ( /\/wp-admin(\/|$)/.test( to.replace( /[#?].*$/, '' ) ) )
+				if ( /\/wp-admin(\/|$)/.test( to.replace(/[#?].*$/, '') ) )
 					return null;
 
 				// Attempt to match the URL to the control frame's scheme
 				// and check if it's allowed. If not, try the original URL.
 				$.each([ to.replace( rscheme, self.scheme() ), to ], function( i, url ) {
 					$.each( self.allowedUrls, function( i, allowed ) {
-						var path;
-
-						allowed = allowed.replace( /\/+$/, '' );
-						path = url.replace( allowed, '' );
-
-						if ( 0 === url.indexOf( allowed ) && /^([/#?]|$)/.test( path ) ) {
+						if ( 0 === url.indexOf( allowed ) ) {
 							result = url;
 							return false;
 						}
@@ -701,9 +701,9 @@
 		if ( ! $.support.postMessage || ( ! $.support.cors && api.settings.isCrossDomain ) )
 			return window.location = api.settings.url.fallback;
 
-		var previewer, parent, topFocus,
-			body = $( document.body ),
-			overlay = body.children('.wp-full-overlay');
+		var body = $( document.body ),
+			overlay = body.children('.wp-full-overlay'),
+			query, previewer, parent;
 
 		// Prevent the form from saving when enter is pressed.
 		$('#customize-controls').on( 'keydown', function( e ) {
@@ -728,9 +728,9 @@
 			query: function() {
 				return {
 					wp_customize: 'on',
-					theme:      api.settings.theme.stylesheet,
-					customized: JSON.stringify( api.get() ),
-					nonce:      this.nonce.preview
+					theme:        api.settings.theme.stylesheet,
+					customized:   JSON.stringify( api.get() ),
+					nonce:        this.nonce.preview
 				};
 			},
 
@@ -773,9 +773,9 @@
 		});
 
 		// Refresh the nonces if the preview sends updated nonces over.
-		previewer.bind( 'nonce', function( nonce ) {
-			$.extend( this.nonce, nonce );
-		});
+ 		previewer.bind( 'nonce', function( nonce ) {
+ 			$.extend( this.nonce, nonce );
+ 		});
 
 		$.each( api.settings.settings, function( id, data ) {
 			api.create( id, id, data.value, {
@@ -846,6 +846,26 @@
 			api.state = state;
 		}());
 
+		// Temporary accordion code.
+		$('.customize-section-title').bind('click keydown', function( event ) {
+
+			if ( event.type === 'keydown' &&  13 !== event.which ) // enter
+					return;
+
+			var clicked = $( this ).parents( '.customize-section' );
+
+			if ( clicked.hasClass('cannot-expand') )
+				return;
+
+			// Scroll up if on #customize-section-title_tagline
+			if ('customize-section-title_tagline' === clicked.attr('id'))
+				$('.wp-full-overlay-sidebar-content').scrollTop(0);
+
+			$( '.customize-section' ).not( clicked ).removeClass( 'open' );
+			clicked.toggleClass( 'open' );
+			event.preventDefault();
+		});
+
 		// Button bindings.
 		$('#save').click( function( event ) {
 			previewer.save();
@@ -862,13 +882,8 @@
 			if ( 9 === event.which ) // tab
 				return;
 			if ( 13 === event.which ) // enter
-				this.click();
+				parent.send( 'close' );
 			event.preventDefault();
-		});
-
-		$('.upload-dropzone a.upload').keydown( function( event ) {
-			if ( 13 === event.which ) // enter
-				this.click();
 		});
 
 		$('.collapse-sidebar').on( 'click keydown', function( event ) {
@@ -915,15 +930,15 @@
 		$.each({
 			'background_image': {
 				controls: [ 'background_repeat', 'background_position_x', 'background_attachment' ],
-				callback: function( to ) { return !! to; }
+				callback: function( to ) { return !! to }
 			},
 			'show_on_front': {
 				controls: [ 'page_on_front', 'page_for_posts' ],
-				callback: function( to ) { return 'page' === to; }
+				callback: function( to ) { return 'page' === to }
 			},
 			'header_textcolor': {
 				controls: [ 'header_textcolor' ],
-				callback: function( to ) { return 'blank' !== to; }
+				callback: function( to ) { return 'blank' !== to }
 			}
 		}, function( settingId, o ) {
 			api( settingId, function( setting ) {
@@ -968,7 +983,7 @@
 					control.settings.data.set( false );
 			});
 
-			control.library.on( 'click', 'a', function() {
+			control.library.on( 'click', 'a', function( event ) {
 				control.settings.data.set( $(this).data('customizeHeaderImageData') );
 			});
 
@@ -993,7 +1008,7 @@
 		api.trigger( 'ready' );
 
 		// Make sure left column gets focus
-		topFocus = $('.back');
+		var topFocus = $('.back');
 		topFocus.focus();
 		setTimeout(function () {
 			topFocus.focus();

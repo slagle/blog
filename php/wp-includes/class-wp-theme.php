@@ -37,21 +37,11 @@ final class WP_Theme implements ArrayAccess {
 	 * @var array
 	 */
 	private static $default_themes = array(
-		'classic'        => 'WordPress Classic',
-		'default'        => 'WordPress Default',
-		'twentyten'      => 'Twenty Ten',
-		'twentyeleven'   => 'Twenty Eleven',
-		'twentytwelve'   => 'Twenty Twelve',
-		'twentythirteen' => 'Twenty Thirteen',
-		'twentyfourteen' => 'Twenty Fourteen',
-	);
-
-	/**
-	 * Renamed theme tags.
-	 */
-	private static $tag_map = array(
-		'fixed-width'    => 'fixed-layout',
-		'flexible-width' => 'fluid-layout',
+		'classic'      => 'WordPress Classic',
+		'default'      => 'WordPress Default',
+		'twentyten'    => 'Twenty Ten',
+		'twentyeleven' => 'Twenty Eleven',
+		'twentytwelve' => 'Twenty Twelve',
 	);
 
 	/**
@@ -96,7 +86,7 @@ final class WP_Theme implements ArrayAccess {
 	/**
 	 * The directory name of the theme's files, inside the theme root.
 	 *
-	 * In the case of a child theme, this is directory name of the child theme.
+	 * In the case of a child theme, this is directory name of the the child theme.
 	 * Otherwise, 'stylesheet' is the same as 'template'.
 	 *
 	 * @access private
@@ -215,7 +205,7 @@ final class WP_Theme implements ArrayAccess {
 		} elseif ( ! file_exists( $this->theme_root . '/' . $theme_file ) ) {
 			$this->headers['Name'] = $this->stylesheet;
 			if ( ! file_exists( $this->theme_root . '/' . $this->stylesheet ) )
-				$this->errors = new WP_Error( 'theme_not_found', sprintf( __( 'The theme directory "%s" does not exist.' ), $this->stylesheet ) );
+				$this->errors = new WP_Error( 'theme_not_found', __( 'The theme directory does not exist.' ) );
 			else
 				$this->errors = new WP_Error( 'theme_no_stylesheet', __( 'Stylesheet is missing.' ) );
 			$this->template = $this->stylesheet;
@@ -714,11 +704,8 @@ final class WP_Theme implements ArrayAccess {
 				}
 
 				foreach ( $value as &$tag ) {
-					if ( isset( $tags_list[ $tag ] ) ) {
+					if ( isset( $tags_list[ $tag ] ) )
 						$tag = $tags_list[ $tag ];
-					} elseif ( isset( self::$tag_map[ $tag ] ) ) {
-						$tag = $tags_list[ self::$tag_map[ $tag ] ];
-					}
 				}
 
 				return $value;
@@ -732,7 +719,7 @@ final class WP_Theme implements ArrayAccess {
 	/**
 	 * The directory name of the theme's "stylesheet" files, inside the theme root.
 	 *
-	 * In the case of a child theme, this is directory name of the child theme.
+	 * In the case of a child theme, this is directory name of the the child theme.
 	 * Otherwise, get_stylesheet() is the same as get_template().
 	 *
 	 * @since 3.4.0

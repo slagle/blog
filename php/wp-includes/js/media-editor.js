@@ -1,5 +1,3 @@
-/* global getUserSetting, tinymce, QTags, wpActiveEditor */
-
 // WordPress, TinyMCE, and Media
 // -----------------------------
 (function($){
@@ -47,7 +45,7 @@
 			props.title = props.title || attachment.title;
 
 			link = props.link || defaultProps.link || getUserSetting( 'urlbutton', 'file' );
-			if ( 'file' === link || 'embed' === link )
+			if ( 'file' === link )
 				linkUrl = attachment.url;
 			else if ( 'post' === link )
 				linkUrl = attachment.link;
@@ -68,8 +66,7 @@
 					src:       size.url,
 					captionId: 'attachment_' + attachment.id
 				});
-			} else if ( 'video' === attachment.type || 'audio' === attachment.type ) {
-				_.extend( props, _.pick( attachment, 'title', 'type', 'icon', 'mime' ) );
+
 			// Format properties for non-images.
 			} else {
 				props.title = props.title || attachment.filename;
@@ -98,48 +95,6 @@
 			return wp.html.string( options );
 		},
 
-		audio: function( props, attachment ) {
-			return wp.media.string._audioVideo( 'audio', props, attachment );
-		},
-
-		video: function( props, attachment ) {
-			return wp.media.string._audioVideo( 'video', props, attachment );
-		},
-
-		_audioVideo: function( type, props, attachment ) {
-			var shortcode, html, extension;
-
-			props = wp.media.string.props( props, attachment );
-			if ( props.link !== 'embed' )
-				return wp.media.string.link( props );
-
-			shortcode = {};
-
-			if ( 'video' === type ) {
-				if ( attachment.width )
-					shortcode.width = attachment.width;
-
-				if ( attachment.height )
-					shortcode.height = attachment.height;
-			}
-
-			extension = attachment.filename.split('.').pop();
-
-			if ( _.contains( wp.media.view.settings.embedExts, extension ) ) {
-				shortcode[extension] = attachment.url;
-			} else {
-				// Render unsupported audio and video files as links.
-				return wp.media.string.link( props );
-			}
-
-			html = wp.shortcode.string({
-				tag:     type,
-				attrs:   shortcode
-			});
-
-			return html;
-		},
-
 		image: function( props, attachment ) {
 			var img = {},
 				options, classes, shortcode, html;
@@ -147,7 +102,7 @@
 			props = wp.media.string.props( props, attachment );
 			classes = props.classes || [];
 
-			img.src = typeof attachment !== 'undefined' ? attachment.url : props.url;
+			img.src = props.url;
 			_.extend( img, _.pick( props, 'width', 'height', 'alt' ) );
 
 			// Only assign the align class to the image if we're not printing
@@ -215,7 +170,6 @@
 				icontag:    'dt',
 				captiontag: 'dd',
 				columns:    '3',
-				link:       'post',
 				size:       'thumbnail',
 				orderby:    'menu_order ID'
 			},
@@ -238,9 +192,6 @@
 				args.perPage = -1;
 
 				// Mark the `orderby` override attribute.
-				if( undefined !== attrs.orderby )
-					attrs._orderByField = attrs.orderby;
-
 				if ( 'rand' === attrs.orderby )
 					attrs._orderbyRandom = true;
 
@@ -288,15 +239,9 @@
 					attrs.id = props.uploadedTo;
 
 				// Check if the gallery is randomly ordered.
-				delete attrs.orderby;
-
 				if ( attrs._orderbyRandom )
 					attrs.orderby = 'rand';
-				else if ( attrs._orderByField && attrs._orderByField != 'rand' )
-					attrs.orderby = attrs._orderByField;
-
 				delete attrs._orderbyRandom;
-				delete attrs._orderByField;
 
 				// If the `ids` attribute is set and `orderby` attribute
 				// is the default value, clear it for cleaner output.
@@ -504,7 +449,7 @@
 		add: function( id, options ) {
 			var workflow = this.get( id );
 
-			if ( workflow ) // only add once: if exists return existing
+			if ( workflow )
 				return workflow;
 
 			workflow = workflows[ id ] = wp.media( _.defaults( options || {}, {
@@ -526,7 +471,7 @@
 					var display = state.display( attachment ).toJSON();
 					return this.send.attachment( display, attachment.toJSON() );
 				}, this ) ).done( function() {
-					wp.media.editor.insert( _.toArray( arguments ).join('\n\n') );
+					wp.media.editor.insert( _.toArray( arguments ).join("\n\n") );
 				});
 			}, this );
 
@@ -630,10 +575,7 @@
 						if ( props[ prop ] )
 							options[ option ] = props[ prop ];
 					});
-				} else if ( 'video' === attachment.type ) {
-					html = wp.media.string.video( props, attachment );
-				} else if ( 'audio' === attachment.type ) {
-					html = wp.media.string.audio( props, attachment );
+
 				} else {
 					html = wp.media.string.link( props );
 					options.post_title = props.title;
@@ -658,10 +600,8 @@
 			}
 		},
 
-		open: function( id, options ) {
+		open: function( id ) {
 			var workflow, editor;
-
-			options = options || {};
 
 			id = this.id( id );
 
@@ -677,9 +617,9 @@
 
 			workflow = this.get( id );
 
-			// Redo workflow if state has changed
-			if ( ! workflow || ( workflow.options && options.state !== workflow.options.state ) )
-				workflow = this.add( id, options );
+			// Initialize the editor's workflow if we haven't yet.
+			if ( ! workflow )
+				workflow = this.add( id );
 
 			return workflow.open();
 		},
@@ -687,13 +627,7 @@
 		init: function() {
 			$(document.body).on( 'click', '.insert-media', function( event ) {
 				var $this = $(this),
-					editor = $this.data('editor'),
-					options = {
-						frame:    'post',
-						state:    'insert',
-						title:    wp.media.view.l10n.addMedia,
-						multiple: true
-					};
+					editor = $this.data('editor');
 
 				event.preventDefault();
 
@@ -704,12 +638,7 @@
 				// See: http://core.trac.wordpress.org/ticket/22445
 				$this.blur();
 
-				if ( $this.hasClass( 'gallery' ) ) {
-					options.state = 'gallery';
-					options.title = wp.media.view.l10n.createGalleryTitle;
-				}
-
-				wp.media.editor.open( editor, options );
+				wp.media.editor.open( editor );
 			});
 		}
 	};

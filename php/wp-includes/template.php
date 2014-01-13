@@ -26,19 +26,7 @@ function get_query_template( $type, $templates = array() ) {
 	if ( empty( $templates ) )
 		$templates = array("{$type}.php");
 
-	$template = locate_template( $templates );
-	/**
-	 * Filter the path of the queried template by type.
-	 *
-	 * The dynamic portion of the hook name, $type, refers to the filename
-	 * -- minus the extension -- of the file to load. This hook also applies
-	 * to various types of files loaded as part of the Template Hierarchy.
-	 *
-	 * @since 1.5.0
-	 *
-	 * @param string $template Path to the template. @see locate_template()
-	 */
-	return apply_filters( "{$type}_template", $template );
+	return apply_filters( "{$type}_template", locate_template( $templates ) );
 }
 
 /**
@@ -85,25 +73,6 @@ function get_archive_template() {
 }
 
 /**
- * Retrieve path of post type archive template in current or parent template.
- *
- * @since 3.7.0
- *
- * @return string
- */
-function get_post_type_archive_template() {
-	$post_type = get_query_var( 'post_type' );
-	if ( is_array( $post_type ) )
-		$post_type = reset( $post_type );
-
-	$obj = get_post_type_object( $post_type );
-	if ( ! $obj->has_archive )
-		return '';
-
-	return get_archive_template();
-}
-
-/**
  * Retrieve path of author template in current or parent template.
  *
  * @since 1.5.0
@@ -115,7 +84,7 @@ function get_author_template() {
 
 	$templates = array();
 
-	if ( is_a( $author, 'WP_User' ) ) {
+	if ( $author ) {
 		$templates[] = "author-{$author->user_nicename}.php";
 		$templates[] = "author-{$author->ID}.php";
 	}
@@ -127,8 +96,8 @@ function get_author_template() {
 /**
  * Retrieve path of category template in current or parent template.
  *
- * Works by first retrieving the current slug, for example 'category-default.php', and then
- * trying category ID, for example 'category-1.php', and will finally fall back to category.php
+ * Works by first retrieving the current slug for example 'category-default.php' and then
+ * trying category ID, for example 'category-1.php' and will finally fallback to category.php
  * template, if those files don't exist.
  *
  * @since 1.5.0
@@ -141,7 +110,7 @@ function get_category_template() {
 
 	$templates = array();
 
-	if ( ! empty( $category->slug ) ) {
+	if ( $category ) {
 		$templates[] = "category-{$category->slug}.php";
 		$templates[] = "category-{$category->term_id}.php";
 	}
@@ -153,8 +122,8 @@ function get_category_template() {
 /**
  * Retrieve path of tag template in current or parent template.
  *
- * Works by first retrieving the current tag name, for example 'tag-wordpress.php', and then
- * trying tag ID, for example 'tag-1.php', and will finally fall back to tag.php
+ * Works by first retrieving the current tag name, for example 'tag-wordpress.php' and then
+ * trying tag ID, for example 'tag-1.php' and will finally fallback to tag.php
  * template, if those files don't exist.
  *
  * @since 2.3.0
@@ -167,7 +136,7 @@ function get_tag_template() {
 
 	$templates = array();
 
-	if ( ! empty( $tag->slug ) ) {
+	if ( $tag ) {
 		$templates[] = "tag-{$tag->slug}.php";
 		$templates[] = "tag-{$tag->term_id}.php";
 	}
@@ -198,7 +167,7 @@ function get_taxonomy_template() {
 
 	$templates = array();
 
-	if ( ! empty( $term->slug ) ) {
+	if ( $term ) {
 		$taxonomy = $term->taxonomy;
 		$templates[] = "taxonomy-$taxonomy-{$term->slug}.php";
 		$templates[] = "taxonomy-$taxonomy.php";
@@ -222,7 +191,7 @@ function get_date_template() {
 /**
  * Retrieve path of home template in current or parent template.
  *
- * This is the template used for the page containing the blog posts.
+ * This is the template used for the page containing the blog posts
  *
  * Attempts to locate 'home.php' first before falling back to 'index.php'.
  *
@@ -256,9 +225,9 @@ function get_front_page_template() {
 /**
  * Retrieve path of page template in current or parent template.
  *
- * Will first look for the specifically assigned page template.
- * Then will search for 'page-{slug}.php', followed by 'page-{id}.php',
- * and finally 'page.php'.
+ * Will first look for the specifically assigned page template
+ * The will search for 'page-{slug}.php' followed by 'page-id.php'
+ * and finally 'page.php'
  *
  * @since 1.5.0
  *
@@ -272,8 +241,7 @@ function get_page_template() {
 	if ( ! $pagename && $id ) {
 		// If a static page is set as the front page, $pagename will not be set. Retrieve it from the queried object
 		$post = get_queried_object();
-		if ( $post )
-			$pagename = $post->post_name;
+		$pagename = $post->post_name;
 	}
 
 	$templates = array();
@@ -322,7 +290,7 @@ function get_single_template() {
 
 	$templates = array();
 
-	if ( ! empty( $object->post_type ) )
+	if ( $object )
 		$templates[] = "single-{$object->post_type}.php";
 	$templates[] = "single.php";
 
@@ -353,12 +321,10 @@ function get_attachment_template() {
 		if ( ! empty( $type ) ) {
 			if ( $template = get_query_template( $type[0] ) )
 				return $template;
-			elseif ( ! empty( $type[1] ) ) {
-				if ( $template = get_query_template( $type[1] ) )
-					return $template;
-				elseif ( $template = get_query_template( "$type[0]_$type[1]" ) )
-					return $template;
-			}
+			elseif ( $template = get_query_template( $type[1] ) )
+				return $template;
+			elseif ( $template = get_query_template( "$type[0]_$type[1]" ) )
+				return $template;
 		}
 	}
 

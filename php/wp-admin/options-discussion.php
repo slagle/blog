@@ -5,8 +5,9 @@
  * @package WordPress
  * @subpackage Administration
  */
+
 /** WordPress Administration Bootstrap */
-require_once( dirname( __FILE__ ) . '/admin.php' );
+require_once('./admin.php');
 
 if ( ! current_user_can( 'manage_options' ) )
 	wp_die( __( 'You do not have sufficient permissions to manage options for this site.' ) );
@@ -27,10 +28,11 @@ get_current_screen()->set_help_sidebar(
 	'<p>' . __('<a href="http://wordpress.org/support/" target="_blank">Support Forums</a>') . '</p>'
 );
 
-include( ABSPATH . 'wp-admin/admin-header.php' );
+include('./admin-header.php');
 ?>
 
 <div class="wrap">
+<?php screen_icon(); ?>
 <h2><?php echo esc_html( $title ); ?></h2>
 
 <form method="post" action="options.php">
@@ -52,7 +54,7 @@ include( ABSPATH . 'wp-admin/admin-header.php' );
 <input name="default_comment_status" type="checkbox" id="default_comment_status" value="open" <?php checked('open', get_option('default_comment_status')); ?> />
 <?php _e('Allow people to post comments on new articles'); ?></label>
 <br />
-<p class="description"><?php echo '(' . __( 'These settings may be overridden for individual articles.' ) . ')'; ?></p>
+<small><em><?php echo '(' . __('These settings may be overridden for individual articles.') . ')'; ?></em></small>
 </fieldset></td>
 </tr>
 <tr valign="top">
@@ -75,13 +77,7 @@ include( ABSPATH . 'wp-admin/admin-header.php' );
 <label for="thread_comments">
 <input name="thread_comments" type="checkbox" id="thread_comments" value="1" <?php checked('1', get_option('thread_comments')); ?> />
 <?php
-/**
- * Filter the maximum depth of threaded/nested comments.
- *
- * @since 2.7.0.
- *
- * @param int $10 The maximum depth of threaded comments. Default 10.
- */
+
 $maxdeep = (int) apply_filters( 'thread_comments_depth_max', 10 );
 
 $thread_comments_depth = '</label><label for="thread_comments_depth"><select name="thread_comments_depth" id="thread_comments_depth">';
@@ -140,7 +136,7 @@ printf( __('Comments should be displayed with the %s comments at the top of each
 <td><fieldset><legend class="screen-reader-text"><span><?php _e('Before a comment appears'); ?></span></legend>
 <label for="comment_moderation">
 <input name="comment_moderation" type="checkbox" id="comment_moderation" value="1" <?php checked('1', get_option('comment_moderation')); ?> />
-<?php _e('Comment must be manually approved'); ?> </label>
+<?php _e('An administrator must always approve the comment'); ?> </label>
 <br />
 <label for="comment_whitelist"><input type="checkbox" name="comment_whitelist" id="comment_whitelist" value="1" <?php checked('1', get_option('comment_whitelist')); ?> /> <?php _e('Comment author must have a previously approved comment'); ?></label>
 </fieldset></td>
@@ -168,7 +164,7 @@ printf( __('Comments should be displayed with the %s comments at the top of each
 <?php do_settings_fields('discussion', 'default'); ?>
 </table>
 
-<h3 class="title"><?php _e('Avatars'); ?></h3>
+<h3><?php _e('Avatars'); ?></h3>
 
 <p><?php _e('An avatar is an image that follows you from weblog to weblog appearing beside your name when you comment on avatar enabled sites. Here you can enable the display of avatars for people who comment on your site.'); ?></p>
 
@@ -223,17 +219,7 @@ $avatar_defaults = array(
 	'monsterid' => __('MonsterID (Generated)'),
 	'retro' => __('Retro (Generated)')
 );
-/**
- * Filter the default avatars.
- *
- * Avatars are stored in key/value pairs, where the key is option value,
- * and the name is the displayed avatar name.
- *
- * @since 2.6.0
- *
- * @param array $avatar_defaults Array of default avatars.
- */
-$avatar_defaults = apply_filters( 'avatar_defaults', $avatar_defaults );
+$avatar_defaults = apply_filters('avatar_defaults', $avatar_defaults);
 $default = get_option('avatar_default');
 if ( empty($default) )
 	$default = 'mystery';
@@ -249,14 +235,7 @@ foreach ( $avatar_defaults as $default_key => $default_name ) {
 	$avatar_list .= ' ' . $default_name . '</label>';
 	$avatar_list .= '<br />';
 }
-/**
- * Filter the HTML output of the default avatar list.
- *
- * @since 2.6.0
- *
- * @param string $avatar_list HTML markup of the avatar list.
- */
-echo apply_filters( 'default_avatar_select', $avatar_list );
+echo apply_filters('default_avatar_select', $avatar_list);
 ?>
 
 </fieldset></td>
@@ -270,4 +249,4 @@ echo apply_filters( 'default_avatar_select', $avatar_list );
 </form>
 </div>
 
-<?php include( ABSPATH . 'wp-admin/admin-footer.php' ); ?>
+<?php include('./admin-footer.php'); ?>

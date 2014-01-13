@@ -37,11 +37,11 @@ function get_category_link( $category ) {
  * @param string $separator Optional, default is '/'. How to separate categories.
  * @param bool $nicename Optional, default is false. Whether to use nice name for display.
  * @param array $visited Optional. Already linked to categories to prevent duplicates.
- * @return string|WP_Error A list of category parents on success, WP_Error on failure.
+ * @return string
  */
 function get_category_parents( $id, $link = false, $separator = '/', $nicename = false, $visited = array() ) {
 	$chain = '';
-	$parent = get_term( $id, 'category' );
+	$parent = get_category( $id );
 	if ( is_wp_error( $parent ) )
 		return $parent;
 
@@ -131,11 +131,11 @@ function _usort_terms_by_ID( $a, $b ) {
  * @since 0.71
  *
  * @param int $cat_ID Category ID.
- * @return string|WP_Error Category name on success, WP_Error on failure.
+ * @return string Category name.
  */
 function get_the_category_by_ID( $cat_ID ) {
 	$cat_ID = (int) $cat_ID;
-	$category = get_term( $cat_ID, 'category' );
+	$category = get_category( $cat_ID );
 	if ( is_wp_error( $category ) )
 		return $category;
 	return $category->name;
@@ -225,7 +225,6 @@ function get_the_category_list( $separator = '', $parents='', $post_id = false )
  * As of 2.7, the function can be used anywhere if it is provided a post ID or post object.
  *
  * @since 1.2.0
- * @uses has_category()
  *
  * @param int|string|array $category Category ID, name or slug, or array of said.
  * @param int|object $post Optional. Post to check instead of the current post. (since 2.7.0)
@@ -235,7 +234,7 @@ function in_category( $category, $post = null ) {
 	if ( empty( $category ) )
 		return false;
 
-	return has_category( $category, $post );
+	return has_term( $category, 'category', $post );
 }
 
 /**
@@ -452,7 +451,7 @@ function wp_list_categories( $args = '' ) {
 	if ( empty( $categories ) ) {
 		if ( ! empty( $show_option_none ) ) {
 			if ( 'list' == $style )
-				$output .= '<li class="cat-item-none">' . $show_option_none . '</li>';
+				$output .= '<li>' . $show_option_none . '</li>';
 			else
 				$output .= $show_option_none;
 		}
@@ -461,14 +460,14 @@ function wp_list_categories( $args = '' ) {
 			$posts_page = ( 'page' == get_option( 'show_on_front' ) && get_option( 'page_for_posts' ) ) ? get_permalink( get_option( 'page_for_posts' ) ) : home_url( '/' );
 			$posts_page = esc_url( $posts_page );
 			if ( 'list' == $style )
-				$output .= "<li class='cat-item-all'><a href='$posts_page'>$show_option_all</a></li>";
+				$output .= "<li><a href='$posts_page'>$show_option_all</a></li>";
 			else
 				$output .= "<a href='$posts_page'>$show_option_all</a>";
 		}
 
 		if ( empty( $r['current_category'] ) && ( is_category() || is_tax() || is_tag() ) ) {
 			$current_term_object = get_queried_object();
-			if ( $current_term_object && $r['taxonomy'] === $current_term_object->taxonomy )
+			if ( $r['taxonomy'] == $current_term_object->taxonomy )
 				$r['current_category'] = get_queried_object_id();
 		}
 
@@ -672,7 +671,7 @@ function wp_generate_tag_cloud( $tags, $args = '' ) {
 		$tag_link = '#' != $tag->link ? esc_url( $tag->link ) : '#';
 		$tag_id = isset($tags[ $key ]->id) ? $tags[ $key ]->id : $key;
 		$tag_name = $tags[ $key ]->name;
-		$a[] = "<a href='$tag_link' class='tag-link-$tag_id' title='" . esc_attr( call_user_func( $topic_count_text_callback, $real_count, $tag, $args ) ) . "' style='font-size: " .
+		$a[] = "<a href='$tag_link' class='tag-link-$tag_id' title='" . esc_attr( call_user_func( $topic_count_text_callback, $real_count ) ) . "' style='font-size: " .
 			str_replace( ',', '.', ( $smallest + ( ( $count - $min_count ) * $font_step ) ) )
 			. "$unit;'>$tag_name</a>";
 	}
@@ -766,8 +765,6 @@ function walk_category_dropdown_tree() {
  */
 class Walker_Category extends Walker {
 	/**
-	 * What the class handles.
-	 *
 	 * @see Walker::$tree_type
 	 * @since 2.1.0
 	 * @var string
@@ -775,8 +772,6 @@ class Walker_Category extends Walker {
 	var $tree_type = 'category';
 
 	/**
-	 * Database fields to use.
-	 *
 	 * @see Walker::$db_fields
 	 * @since 2.1.0
 	 * @todo Decouple this
@@ -785,16 +780,12 @@ class Walker_Category extends Walker {
 	var $db_fields = array ('parent' => 'parent', 'id' => 'term_id');
 
 	/**
-	 * Starts the list before the elements are added.
-	 *
 	 * @see Walker::start_lvl()
-	 *
 	 * @since 2.1.0
 	 *
 	 * @param string $output Passed by reference. Used to append additional content.
-	 * @param int    $depth  Depth of category. Used for tab indentation.
-	 * @param array  $args   An array of arguments. Will only append content if style argument value is 'list'.
-	 *                       @see wp_list_categories()
+	 * @param int $depth Depth of category. Used for tab indentation.
+	 * @param array $args Will only append content if style argument value is 'list'.
 	 */
 	function start_lvl( &$output, $depth = 0, $args = array() ) {
 		if ( 'list' != $args['style'] )
@@ -805,16 +796,12 @@ class Walker_Category extends Walker {
 	}
 
 	/**
-	 * Ends the list of after the elements are added.
-	 *
 	 * @see Walker::end_lvl()
-	 *
 	 * @since 2.1.0
 	 *
 	 * @param string $output Passed by reference. Used to append additional content.
-	 * @param int    $depth  Depth of category. Used for tab indentation.
-	 * @param array  $args   An array of arguments. Will only append content if style argument value is 'list'.
-	 *                       @wsee wp_list_categories()
+	 * @param int $depth Depth of category. Used for tab indentation.
+	 * @param array $args Will only append content if style argument value is 'list'.
 	 */
 	function end_lvl( &$output, $depth = 0, $args = array() ) {
 		if ( 'list' != $args['style'] )
@@ -825,17 +812,13 @@ class Walker_Category extends Walker {
 	}
 
 	/**
-	 * Start the element output.
-	 *
 	 * @see Walker::start_el()
-	 *
 	 * @since 2.1.0
 	 *
-	 * @param string $output   Passed by reference. Used to append additional content.
+	 * @param string $output Passed by reference. Used to append additional content.
 	 * @param object $category Category data object.
-	 * @param int    $depth    Depth of category in reference to parents. Default 0.
-	 * @param array  $args     An array of arguments. @see wp_list_categories()
-	 * @param int    $id       ID of the current category.
+	 * @param int $depth Depth of category in reference to parents.
+	 * @param array $args
 	 */
 	function start_el( &$output, $category, $depth = 0, $args = array(), $id = 0 ) {
 		extract($args);
@@ -901,16 +884,13 @@ class Walker_Category extends Walker {
 	}
 
 	/**
-	 * Ends the element output, if needed.
-	 *
 	 * @see Walker::end_el()
-	 *
 	 * @since 2.1.0
 	 *
 	 * @param string $output Passed by reference. Used to append additional content.
-	 * @param object $page   Not used.
-	 * @param int    $depth  Depth of category. Not used.
-	 * @param array  $args   An array of arguments. Only uses 'list' for whether should append to output. @see wp_list_categories()
+	 * @param object $page Not used.
+	 * @param int $depth Depth of category. Not used.
+	 * @param array $args Only uses 'list' for whether should append to output.
 	 */
 	function end_el( &$output, $page, $depth = 0, $args = array() ) {
 		if ( 'list' != $args['style'] )
@@ -945,17 +925,15 @@ class Walker_CategoryDropdown extends Walker {
 	var $db_fields = array ('parent' => 'parent', 'id' => 'term_id');
 
 	/**
-	 * Start the element output.
-	 *
 	 * @see Walker::start_el()
 	 * @since 2.1.0
 	 *
-	 * @param string $output   Passed by reference. Used to append additional content.
+	 * @param string $output Passed by reference. Used to append additional content.
 	 * @param object $category Category data object.
-	 * @param int    $depth    Depth of category. Used for padding.
-	 * @param array  $args     Uses 'selected' and 'show_count' keys, if they exist. @see wp_dropdown_categories()
+	 * @param int $depth Depth of category. Used for padding.
+	 * @param array $args Uses 'selected' and 'show_count' keys, if they exist.
 	 */
-	function start_el( &$output, $category, $depth = 0, $args = array(), $id = 0 ) {
+	function start_el( &$output, $category, $depth, $args, $id = 0 ) {
 		$pad = str_repeat('&nbsp;', $depth * 3);
 
 		$cat_name = apply_filters('list_cats', $category->name, $category);
@@ -1002,7 +980,7 @@ function get_tag_link( $tag ) {
  * @uses apply_filters() Calls 'get_the_tags' filter on the list of post tags.
  *
  * @param int $id Post ID.
- * @return array|bool Array of tag objects on success, false on failure.
+ * @return array
  */
 function get_the_tags( $id = 0 ) {
 	return apply_filters( 'get_the_tags', get_the_terms( $id, 'post_tag' ) );
@@ -1018,7 +996,7 @@ function get_the_tags( $id = 0 ) {
  * @param string $sep Optional. Between tags.
  * @param string $after Optional. After tags.
  * @param int $id Optional. Post ID. Defaults to the current post.
- * @return string|bool|WP_Error A list of tags on success, false or WP_Error on failure.
+ * @return string
  */
 function get_the_tag_list( $before = '', $sep = '', $after = '', $id = 0 ) {
 	return apply_filters( 'the_tags', get_the_term_list( $id, 'post_tag', $before, $sep, $after ), $before, $sep, $after, $id );
@@ -1032,6 +1010,7 @@ function get_the_tag_list( $before = '', $sep = '', $after = '', $id = 0 ) {
  * @param string $before Optional. Before list.
  * @param string $sep Optional. Separate items using this.
  * @param string $after Optional. After list.
+ * @return string
  */
 function the_tags( $before = null, $sep = ', ', $after = '' ) {
 	if ( null === $before )
@@ -1061,12 +1040,10 @@ function tag_description( $tag = 0 ) {
  * @return string Term description, available.
  */
 function term_description( $term = 0, $taxonomy = 'post_tag' ) {
-	if ( ! $term && ( is_tax() || is_tag() || is_category() ) ) {
+	if ( !$term && ( is_tax() || is_tag() || is_category() ) ) {
 		$term = get_queried_object();
-		if ( $term ) {
-			$taxonomy = $term->taxonomy;
-			$term = $term->term_id;
-		}
+		$taxonomy = $term->taxonomy;
+		$term = $term->term_id;
 	}
 	$description = get_term_field( 'description', $term, $taxonomy );
 	return is_wp_error( $description ) ? '' : $description;
@@ -1077,9 +1054,9 @@ function term_description( $term = 0, $taxonomy = 'post_tag' ) {
  *
  * @since 2.5.0
  *
- * @param int|object $post Post ID or object.
+ * @param mixed $post Post ID or object.
  * @param string $taxonomy Taxonomy name.
- * @return array|bool|WP_Error Array of term objects on success, false or WP_Error on failure.
+ * @return array|bool False on failure. Array of term objects on success.
  */
 function get_the_terms( $post, $taxonomy ) {
 	if ( ! $post = get_post( $post ) )
@@ -1109,7 +1086,7 @@ function get_the_terms( $post, $taxonomy ) {
  * @param string $before Optional. Before list.
  * @param string $sep Optional. Separate items using this.
  * @param string $after Optional. After list.
- * @return string|bool|WP_Error A list of terms on success, false or WP_Error on failure.
+ * @return string
  */
 function get_the_term_list( $id, $taxonomy, $before = '', $sep = '', $after = '' ) {
 	$terms = get_the_terms( $id, $taxonomy );

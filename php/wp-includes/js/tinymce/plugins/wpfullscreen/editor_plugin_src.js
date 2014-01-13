@@ -1,34 +1,33 @@
-/* global tinymce:false, switchEditors, fullscreen */
 /**
  * WP Fullscreen TinyMCE plugin
  *
- * Contains code from Moxiecode Systems AB released under LGPL http://tinymce.moxiecode.com/license
+ * Contains code from Moxiecode Systems AB released under LGPL License http://tinymce.moxiecode.com/license
  */
 
 (function() {
 	tinymce.create('tinymce.plugins.wpFullscreenPlugin', {
 		resize_timeout: false,
 
-		init : function( ed ) {
-			var t = this, s = {}, DOM = tinymce.DOM;
+		init : function(ed, url) {
+			var t = this, oldHeight = 0, s = {}, DOM = tinymce.DOM;
 
 			// Register commands
 			ed.addCommand('wpFullScreenClose', function() {
-				// this removes the editor, content has to be saved first with tinymce.execCommand('wpFullScreenSave');
+				// this removes the editor, content has to be saved first with tinyMCE.execCommand('wpFullScreenSave');
 				if ( ed.getParam('wp_fullscreen_is_enabled') ) {
 					DOM.win.setTimeout(function() {
-						tinymce.remove(ed);
+						tinyMCE.remove(ed);
 						DOM.remove('wp_mce_fullscreen_parent');
-						tinymce.settings = tinymce.oldSettings; // Restore old settings
+						tinyMCE.settings = tinyMCE.oldSettings; // Restore old settings
 					}, 10);
 				}
 			});
 
 			ed.addCommand('wpFullScreenSave', function() {
-				var ed = tinymce.get('wp_mce_fullscreen'), edd;
+				var ed = tinyMCE.get('wp_mce_fullscreen'), edd;
 
 				ed.focus();
-				edd = tinymce.get( ed.getParam('wp_fullscreen_editor_id') );
+				edd = tinyMCE.get( ed.getParam('wp_fullscreen_editor_id') );
 
 				edd.setContent( ed.getContent({format : 'raw'}), {format : 'raw'} );
 			});
@@ -36,11 +35,11 @@
 			ed.addCommand('wpFullScreenInit', function() {
 				var d, b, fsed;
 
-				ed = tinymce.activeEditor;
+				ed = tinyMCE.activeEditor;
 				d = ed.getDoc();
 				b = d.body;
 
-				tinymce.oldSettings = tinymce.settings; // Store old settings
+				tinyMCE.oldSettings = tinyMCE.settings; // Store old settings
 
 				tinymce.each(ed.settings, function(v, n) {
 					s[n] = v;
@@ -68,7 +67,7 @@
 						edd.setContent( switchEditors.wpautop( edd.getElement().value ) );
 
 					setTimeout(function(){ // add last
-						edd.onNodeChange.add( function() {
+						edd.onNodeChange.add(function(ed, cm, e){
 							tinymce.each(buttons, function(c) {
 								var btn, cls;
 
@@ -146,21 +145,21 @@
 						ed.dom.win.scrollTo(0, y);
 					}, 40);
 				}
-			}
+			};
 
 			// Add appropriate listeners for resizing content area
-			ed.onInit.add( function( ed ) {
+			ed.onInit.add(function(ed, l) {
 				ed.onChange.add(resize);
 				ed.onSetContent.add(resize);
 				ed.onPaste.add(resize);
 				ed.onKeyUp.add(resize);
 				ed.onPostRender.add(resize);
 
-				ed.getBody().style.overflowY = 'hidden';
+				ed.getBody().style.overflowY = "hidden";
 			});
 
 			if ( ed.getParam('autoresize_on_init', true) ) {
-				ed.onLoadContent.add( function() {
+				ed.onLoadContent.add(function(ed, l) {
 					// Because the content area resizes when its content CSS loads,
 					// and we can't easily add a listener to its onload event,
 					// we'll just trigger a resize after a short loading period
@@ -170,7 +169,7 @@
 				});
 			}
 
-			// Register the command so that it can be invoked by using tinymce.activeEditor.execCommand('mceExample');
+			// Register the command so that it can be invoked by using tinyMCE.activeEditor.execCommand('mceExample');
 			ed.addCommand('wpAutoResize', resize);
 		},
 

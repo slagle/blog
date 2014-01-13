@@ -40,16 +40,7 @@ function get_categories( $args = '' ) {
 	$defaults = array( 'taxonomy' => 'category' );
 	$args = wp_parse_args( $args, $defaults );
 
-	$taxonomy = $args['taxonomy'];
-	/**
-	 * Filter the taxonomy used to retrieve terms when calling get_categories().
-	 *
-	 * @since 2.7.0
-	 *
-	 * @param string $taxonomy Taxonomy to retrieve terms from.
-	 * @param array  $args     An array of arguments. @see get_terms()
-	 */
-	$taxonomy = apply_filters( 'get_categories_taxonomy', $taxonomy, $args );
+	$taxonomy = apply_filters( 'get_categories_taxonomy', $args['taxonomy'], $args );
 
 	// Back compat
 	if ( isset($args['type']) && 'link' == $args['type'] ) {
@@ -142,19 +133,13 @@ function get_category_by_path( $category_path, $full_match = true, $output = OBJ
 			$path = '/' . $curcategory->slug . $path;
 		}
 
-		if ( $path == $full_path ) {
-			$category = get_term( $category->term_id, 'category', $output );
-			_make_cat_compat( $category );
-			return $category;
-		}
+		if ( $path == $full_path )
+			return get_category( $category->term_id, $output );
 	}
 
 	// If full matching is not required, return the first cat that matches the leaf.
-	if ( ! $full_match ) {
-		$category = get_term( reset( $categories )->term_id, 'category', $output );
-		_make_cat_compat( $category );
-		return $category;
-	}
+	if ( ! $full_match )
+		return get_category( $categories[0]->term_id, $output );
 
 	return null;
 }
@@ -200,7 +185,7 @@ function get_cat_ID( $cat_name ) {
  */
 function get_cat_name( $cat_id ) {
 	$cat_id = (int) $cat_id;
-	$category = get_term( $cat_id, 'category' );
+	$category = get_category( $cat_id );
 	if ( ! $category || is_wp_error( $category ) )
 		return '';
 	return $category->name;
@@ -272,14 +257,6 @@ function get_tags( $args = '' ) {
 		return $return;
 	}
 
-	/**
-	 * Filter the array of term objects returned for the 'post_tag' taxonomy.
-	 *
-	 * @since 2.3.0
-	 *
-	 * @param array $tags Array of 'post_tag' term objects.
-	 * @param array $args An array of arguments. @see get_terms()
-	 */
 	$tags = apply_filters( 'get_tags', $tags, $args );
 	return $tags;
 }
